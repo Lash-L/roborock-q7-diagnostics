@@ -1,0 +1,2 @@
+# Zero external dependencies required!
+# This tool runs entirely on the Python 3.8+ standard library (socket, struct, http.server, json, dataclasses).

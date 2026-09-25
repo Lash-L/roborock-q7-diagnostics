@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roborock Q7 &amp; 3irobotix B01 Diagnostic Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #121826;
+      --card: #182235;
+      --card-alt: #1e2a42;
+      --border: #23314a;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --good: #10b981;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .brand p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--bad);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge.connected {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--good);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Controls */
+    .controls {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: #222f46; border-color: #3b82f6; }
+    .btn-primary { background: #0284c7; border-color: #38bdf8; color: white; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-success { background: #059669; border-color: #10b981; color: white; }
+    .btn-success:hover { background: #047857; }
+    .btn-danger { background: #dc2626; border-color: #ef4444; color: white; }
+
+    /* Layout */
+    main {
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 20px;
+      max-width: 1680px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    @media (max-width: 1080px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+
+    /* Grids & Metric Tiles */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .metric-tile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Robot View */
+    .schematic-box {
+      background: #080c14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    svg.vacuum {
+      width: 290px;
+      height: 290px;
+    }
+
+    .sensor-pin {
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .sensor-pin.good { fill: #10b981; }
+    .sensor-pin.triggered { fill: #ef4444; }
+
+    .bumper-arc {
+      stroke: #2563eb;
+      transition: all 0.2s;
+    }
+
+    .bumper-arc.pressed {
+      stroke: #ef4444 !important;
+      stroke-width: 10px !important;
+    }
+
+    /* Diagnostics Banner */
+    .health-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      border: 1px solid;
+    }
+
+    .health-banner.nominal { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+    .health-banner.fault { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+
+    .score-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .nominal .score-circle { background: #10b981; color: #022c22; }
+    .fault .score-circle { background: #ef4444; color: #450a0a; }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    table.data-table th, table.data-table td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.data-table th {
+      color: var(--text-muted);
+      font-size: 11px;
+      background: var(--card);
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .badge.nominal { background: rgba(16, 185, 129, 0.2); color: var(--good); }
+    .badge.error { background: rgba(239, 68, 68, 0.2); color: var(--bad); }
+    .badge.warn { background: rgba(245, 158, 11, 0.2); color: var(--warn); }
+    .badge.info { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
+
+    /* Fault Cards */
+    .fault-card {
+      background: #1e131d;
+      border: 1px solid #7f1d1d;
+      border-left: 4px solid var(--bad);
+      border-radius: 6px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .fault-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #fca5a5;
+    }
+
+    .fault-desc {
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .repair-steps {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+
+    .repair-steps ol { padding-left: 18px; }
+    .repair-steps li { margin-bottom: 4px; }
+
+    /* SSH note */
+    .note-box {
+      background: #181920;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Subsystem List */
+    .subsystem-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .subsystem-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .subsystem-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Protobuf Inspector */
+    .tag-table-container {
+      max-height: 480px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .tag-search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tag-search-input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .tag-search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .tag-pill {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+    .tag-active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .tag-idle {
+      background: rgba(148, 163, 184, 0.1);
+      color: #64748b;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* Required Setup Steps Banner */
+    .steps-card {
+      background: linear-gradient(180deg, #131d2e 0%, var(--surface) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+
+    .steps-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .steps-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .step-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .step-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .step-text {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .step-text strong {
+      color: #f8fafc;
+    }
+
+    .step-text code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #fde047;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div>
+        <h1>Roborock Q7 &amp; 3irobotix B01 Diagnostic Tool</h1>
+        <p>Direct Connection to Port 6001 (192.168.5.1) &bull; Everest OS / 36-Tag Nanopb Protocol</p>
+      </div>
+    </div>
+
+    <div id="statusBadge" class="status-badge">
+      <span class="dot"></span>
+      <span id="statusText">DISCONNECTED</span>
+    </div>
+  </header>
+
+  <!-- PLATFORM COMPATIBILITY NOTICE -->
+  <div style="background: #0f172a; border-bottom: 1px solid var(--border); padding: 8px 24px; font-size: 11px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 1px 7px; border-radius: 4px; font-weight: 700; font-size: 10px;">SUPPORTED</span>
+      <span style="color: var(--text); font-weight: 600;">Roborock Q7 / Q7+ / Q7 Max (sc05) &bull; 3irobotix B01 ODM Platforms (Cecotec Conga, Wilfa, Tesvor)</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+      <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 1px 7px; border-radius: 4px; font-weight: 700; font-size: 10px;">UNSUPPORTED</span>
+      <span style="color: var(--text-muted);">Roborock S-Series (S5-S8) &amp; Q Revo (RRCore Architecture &bull; No Port 6001)</span>
+    </div>
+  </div>
+
+  <!-- HOW TO ENTER DIAGNOSTIC MODE STEPS (Only visible when disconnected) -->
+  <div id="stepsCard" class="steps-card">
+    <div class="steps-header" onclick="toggleSteps()">
+      <div class="steps-title">
+        <svg style="width:16px;height:16px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Required Setup: How to Put Vacuum into Diagnostic Mode (Activates Port 6001)
+      </div>
+      <span id="stepsToggleText" style="font-size:11px; color:var(--text-muted); cursor:pointer;">[Hide Steps]</span>
+    </div>
+
+    <div id="stepsBody" class="steps-grid">
+      <div class="step-item">
+        <span class="step-badge">PASS 1 &bull; UNCOVER CLIFF SENSORS</span>
+        <div class="step-text">
+          1. <strong>Raise robot off floor</strong> on a box/stand so all <strong>cliff sensors are NOT covered</strong> and see open air.<br>
+          2. Hold <strong>both Left &amp; Right sides of front bumper inward</strong>.<br>
+          3. Hold <strong>Home</strong> + <strong>Power</strong> together. <strong>Keep holding until the power-up music is done</strong>.<br>
+          4. <strong>The LEDs will turn a whitish-red color</strong> to confirm gate clearance.<br>
+          5. Turn robot fully off and wait 15 seconds.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <span class="step-badge">PASS 2 &bull; FACTORY AP BOOT</span>
+        <div class="step-text">
+          1. Place vacuum on a <strong>clear, level floor</strong> with front bumper <strong>released</strong>.<br>
+          2. Hold <strong>Home</strong> + <strong>Power</strong> together. <strong>Keep holding until the power-up music is done</strong>.<br>
+          3. <strong>The LEDs will turn a whitish-red color</strong> in this mode as well.<br>
+          4. Robot will start broadcasting its factory Wi-Fi network.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <span class="step-badge">PASS 3 &bull; CONNECT WI-FI</span>
+        <div class="step-text">
+          1. On your PC, connect to the Wi-Fi matching the robot's <strong>Serial Number</strong> (or <code>DEFAULTSN</code>).<br>
+          2. Password: <code>test3irobotix</code>.<br>
+          3. Robot IP is <code>192.168.5.1</code> (ignore "no internet" warning).
+        </div>
+      </div>
+
+      <div class="step-item">
+        <span class="step-badge">PASS 4 &bull; RUN DIAGNOSTICS</span>
+        <div class="step-text">
+          1. Click <strong>Start Diagnostics (Connect)</strong> below.<br>
+          2. The tool streams live 36-tag Nanopb telemetry: optical cliffs, motors, IMU, ultrasonic carpet, SLAM, and bumpers.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-success" id="btnConnect" onclick="toggleConnect()">Start Diagnostics (Connect)</button>
+    <button class="btn btn-primary" onclick="readAllData()">Read All 6001 Data</button>
+    <button class="btn" onclick="readCliff()">Read Cliff ADC</button>
+    <button class="btn" onclick="exportReport()">Export Report</button>
+    <button class="btn" id="btnSetupHelp" onclick="toggleStepsCard()" style="margin-left: auto; font-size: 12px; display: none;">Show Setup Steps</button>
+  </div>
+
+  <main>
+    <!-- LEFT COLUMN: SENSOR SCHEMATIC & SUBSYSTEMS -->
+    <div>
+      <div class="card">
+        <div class="card-title">Hardware Bottom Schematic View</div>
+        <div class="schematic-box">
+          <svg class="vacuum" viewBox="0 0 300 300">
+            <!-- Chassis -->
+            <circle cx="150" cy="150" r="140" fill="#141c2c" stroke="#253550" stroke-width="4"/>
+
+            <!-- Bumper Arcs -->
+            <path id="svgBumperLeft" class="bumper-arc" d="M 15 130 A 140 140 0 0 1 150 10" fill="none" stroke="#2563eb" stroke-width="6"/>
+            <path id="svgBumperRight" class="bumper-arc" d="M 150 10 A 140 140 0 0 1 285 130" fill="none" stroke="#2563eb" stroke-width="6"/>
+
+            <!-- Wheels -->
+            <rect id="svgWheelLeft" x="28" y="130" width="22" height="46" rx="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+            <rect id="svgWheelRight" x="250" y="130" width="22" height="46" rx="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+
+            <!-- Main Brush -->
+            <rect id="svgMainBrush" x="90" y="135" width="120" height="36" rx="4" fill="#0f172a" stroke="#e11d48" stroke-width="2"/>
+            <line x1="95" y1="153" x2="205" y2="153" stroke="#f43f5e" stroke-width="2" stroke-dasharray="6,4"/>
+
+            <!-- Side Brush (front right bottom view) -->
+            <circle id="svgSideBrush" cx="245" cy="70" r="13" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+            <line x1="245" y1="57" x2="245" y2="83" stroke="#38bdf8" stroke-width="1.5"/>
+            <line x1="232" y1="70" x2="258" y2="70" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="225" y="93" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">SIDE</text>
+
+            <!-- Ultrasonic Carpet Sensor (front center) -->
+            <circle id="pinCarpet" class="sensor-pin" cx="150" cy="70" r="8" fill="#334155" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="133" y="60" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">CARPET</text>
+
+            <!-- Wall Follow TOF Sensor (right perimeter) -->
+            <rect id="pinWall" x="278" y="100" width="6" height="14" rx="2" fill="#334155" stroke="#38bdf8" stroke-width="1"/>
+            <text x="240" y="122" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">WALL</text>
+
+            <!-- Charging Contacts -->
+            <rect id="pinDockLeft" x="110" y="28" width="14" height="6" rx="2" fill="#475569"/>
+            <rect id="pinDockRight" x="176" y="28" width="14" height="6" rx="2" fill="#475569"/>
+
+            <!-- 4 Cliff Sensors -->
+            <circle id="pinCliffLeft" class="sensor-pin good" cx="38" cy="105" r="8"/>
+            <text x="18" y="102" fill="#94a3b8" font-size="9" font-family="JetBrains Mono">LEFT</text>
+
+            <circle id="pinCliffLeftFront" class="sensor-pin good" cx="95" cy="38" r="8"/>
+            <text x="80" y="24" fill="#94a3b8" font-size="9" font-family="JetBrains Mono">L-FRONT</text>
+
+            <circle id="pinCliffRightFront" class="sensor-pin good" cx="205" cy="38" r="8"/>
+            <text x="195" y="24" fill="#94a3b8" font-size="9" font-family="JetBrains Mono">R-FRONT</text>
+
+            <circle id="pinCliffRight" class="sensor-pin good" cx="262" cy="105" r="8"/>
+            <text x="250" y="102" fill="#94a3b8" font-size="9" font-family="JetBrains Mono">RIGHT</text>
+
+            <!-- Dustbox / Mop Bracket -->
+            <path id="svgDustbox" d="M 85 240 Q 150 260 215 240 L 205 200 Q 150 215 95 200 Z" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+            <text x="110" y="232" fill="#38bdf8" font-size="9" font-family="JetBrains Mono">DUSTBOX / MOP</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- CLIFF SENSORS ADC -->
+      <div class="card">
+        <div class="card-title">Cliff Sensor Optical ADC</div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Sensor</th><th>Status</th><th>ADC</th><th>Threshold</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Left</td><td id="statCliffLeft"><span class="badge nominal">CLEAR</span></td><td id="adcCliffLeft">--</td><td>38</td></tr>
+            <tr><td>Left-Front</td><td id="statCliffLeftFront"><span class="badge nominal">CLEAR</span></td><td id="adcCliffLeftFront">--</td><td>20</td></tr>
+            <tr><td>Right-Front</td><td id="statCliffRightFront"><span class="badge nominal">CLEAR</span></td><td id="adcCliffRightFront">--</td><td>20</td></tr>
+            <tr><td>Right</td><td id="statCliffRight"><span class="badge nominal">CLEAR</span></td><td id="adcCliffRight">--</td><td>58</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SUBSYSTEM HEALTH SUMMARY -->
+      <div class="card">
+        <div class="card-title">Subsystem Health Status</div>
+        <div id="subsystemsContainer">
+          <div class="subsystem-item">
+            <span class="subsystem-title">Cliff Sensors</span>
+            <span class="subsystem-score" id="subCliff">100%</span>
+          </div>
+          <div class="subsystem-item">
+            <span class="subsystem-title">Collision &amp; Bumpers</span>
+            <span class="subsystem-score" id="subBumper">100%</span>
+          </div>
+          <div class="subsystem-item">
+            <span class="subsystem-title">Motors &amp; Drivetrain</span>
+            <span class="subsystem-score" id="subMotors">100%</span>
+          </div>
+          <div class="subsystem-item">
+            <span class="subsystem-title">IMU &amp; Navigation</span>
+            <span class="subsystem-score" id="subImu">100%</span>
+          </div>
+          <div class="subsystem-item">
+            <span class="subsystem-title">Battery &amp; Power</span>
+            <span class="subsystem-score" id="subBattery">100%</span>
+          </div>
+          <div class="subsystem-item">
+            <span class="subsystem-title">Dustbin &amp; Filter</span>
+            <span class="subsystem-score" id="subDustbin">100%</span>
+          </div>
+          <div class="subsystem-item">
+            <span class="subsystem-title">Firmware &amp; Architecture</span>
+            <span class="subsystem-score" id="subSystem">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SSH NOTE CARD -->
+      <div class="card">
+        <div class="card-title">SSH Service Status</div>
+        <div class="note-box">
+          <div>Port 22 is refused by the vacuum firmware. While the factory 0xF7 command queries the credential stored in vendor NVRAM, <strong>it does not grant shell access</strong> because no SSH daemon is installed or running on stock firmware.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: TELEMETRY & DIAGNOSTICS -->
+    <div>
+      <div id="healthBanner" class="health-banner nominal">
+        <div>
+          <h2 id="healthTitle" style="font-size: 16px; font-weight: 800;">READY TO CONNECT</h2>
+          <p id="healthDesc" style="font-size: 12px; color: var(--text-muted);">Connect your computer to the vacuum's factory Wi-Fi (test3irobotix) and click "Start Diagnostics".</p>
+        </div>
+        <div class="score-circle" id="healthScore">--</div>
+      </div>
+
+      <!-- FAULT REPAIR GUIDES -->
+      <div class="card">
+        <div class="card-title">
+          <span>Fault Diagnosis &amp; DIY Repair Guide</span>
+          <span id="faultBadge" class="badge nominal">0 FAULTS</span>
+        </div>
+        <div id="faultsContainer" style="color: var(--text-muted); font-size: 13px;">
+          No active faults detected. Click "Start Diagnostics" to stream live sensor data from port 6001.
+        </div>
+      </div>
+
+      <!-- DEVICE INFO -->
+      <div class="card">
+        <div class="card-title">Vacuum Device Identity (Q7 / B01)</div>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Model</td><td id="infoModel">roborock.vacuum.sc05</td><td>Firmware</td><td id="infoFw">03.01.74</td></tr>
+            <tr><td>SKU</td><td id="infoSku">S031APRO</td><td>MCU</td><td id="infoMcu">1.0.0_21070308</td></tr>
+            <tr><td>Battery</td><td id="infoBat">--</td><td>MCU Fault</td><td id="infoFault">0 (Nominal)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- MOTORS & DRIVETRAIN (TAGS 6, 7, 8, 9, 10) -->
+      <div class="card">
+        <div class="card-title">Motors &amp; Drivetrain Telemetry (Tags 6..10)</div>
+        <div class="grid-4">
+          <div class="metric-tile">
+            <div class="metric-label">Rolling Brush (Tag 7)</div>
+            <div class="metric-val" id="valRollingStatus"><span class="badge nominal">IDLE</span></div>
+            <div class="metric-sub" id="valRollingCurrent">0 mA &bull; Spd: --</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Side Brush (Tag 6)</div>
+            <div class="metric-val" id="valSideStatus"><span class="badge nominal">IDLE</span></div>
+            <div class="metric-sub" id="valSideCurrent">0 mA &bull; Spd: --</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Suction Blower (Tag 8)</div>
+            <div class="metric-val" id="valBlowerSpeed">-- RPM</div>
+            <div class="metric-sub" id="valBlowerLevel">Level: -- &bull; 0 mA</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Drive Wheels (Tags 9, 10)</div>
+            <div class="metric-val" id="valWheelsStatus"><span class="badge nominal">NOMINAL</span></div>
+            <div class="metric-sub" id="valWheelsSub">L: 0 mA | R: 0 mA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE ACTUATOR DIAGNOSTICS & HARDWARE TEST BENCH -->
+      <div class="card" style="border: 1px solid #0284c7; background: linear-gradient(180deg, #131d2e 0%, var(--surface) 100%);">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--accent); font-weight: 700;">Active Actuator Diagnostics &amp; Hardware Test Bench</span>
+          <button class="btn btn-danger" style="padding: 4px 12px; font-size: 11px;" onclick="actuateMotor('stop', 0, 0)">🛑 STOP ALL MOTORS</button>
+        </div>
+        
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 6px; border-left: 3px solid #f59e0b; line-height: 1.6;">
+          <strong style="color: #fde047;">⚠️ MCU Hardware Drop Interlock:</strong> When the vacuum is elevated or upside-down, the suspension springs extend the drive wheels down (<code>left_wheel_up</code> open circuit) and cliff sensors see open air (0 ADC). The STM32 MCU automatically <strong>locks out wheel motors and high-speed fans</strong> for finger safety. To test drive wheels or blower fan, <strong>place the robot flat on the floor</strong> or hold the wheel suspension compressed into the chassis.
+        </div>
+
+        <!-- ACTUATOR CONTROLS GRID -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px;">
+          
+          <!-- DRIVE WHEELS KEYPAD -->
+          <div style="background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 700; color: #f8fafc;">Drive Wheels (Tags 9, 10 &bull; Cmd 0x67)</span>
+              <span style="font-size: 11px; color: var(--text-muted);">Max 50 mm/s</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-width: 220px; margin: 0 auto 10px auto;">
+              <div></div>
+              <button class="btn" style="padding: 6px; justify-content: center;" onclick="actuateMotor('wheels_fwd', 30, 1.5)">▲ Fwd</button>
+              <div></div>
+              <button class="btn" style="padding: 6px; justify-content: center;" onclick="actuateMotor('wheels_left', 30, 1.0)">◄ Left</button>
+              <button class="btn btn-danger" style="padding: 6px; justify-content: center;" onclick="actuateMotor('stop', 0, 0)">■ Stop</button>
+              <button class="btn" style="padding: 6px; justify-content: center;" onclick="actuateMotor('wheels_right', 30, 1.0)">► Right</button>
+              <div></div>
+              <button class="btn" style="padding: 6px; justify-content: center;" onclick="actuateMotor('wheels_rev', 30, 1.5)">▼ Rev</button>
+              <div></div>
+            </div>
+            <div style="display: flex; gap: 6px; justify-content: center;">
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('wheel_left_only', 30, 1.5)">Left Wheel Only</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('wheel_right_only', 30, 1.5)">Right Wheel Only</button>
+            </div>
+          </div>
+
+          <!-- MAIN & SIDE BRUSHES -->
+          <div style="background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Brushes (Tags 6 &amp; 7 &bull; Cmd 0x6A, 0x69)</div>
+            
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Main Roller Brush:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('main_brush', 30, 2)">Low (30%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('main_brush', 60, 2)">Med (60%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('main_brush', 100, 2)">Max (100%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('main_brush', 0, 0)">Off</button>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Side Edge Brush:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('side_brush', 30, 2)">Low (30%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('side_brush', 60, 2)">Med (60%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('side_brush', 100, 2)">Max (100%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('side_brush', 0, 0)">Off</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUCTION BLOWER FAN -->
+          <div style="background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 700; color: #f8fafc;">Suction Blower Fan (Tag 8 &bull; Cmd 0x84, 0x85, 0x68)</span>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('blower', 25, 2.5)">Quiet (25%)</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('blower', 50, 2.5)">Balanced (50%)</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('blower', 75, 2.5)">Turbo (75%)</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('blower', 100, 2.5)">Max (100%)</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('blower', 0, 0)">Off</button>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted);">Auto-engages manual control mode (0x84) and ramps turbine PWM (0x85).</div>
+          </div>
+
+          <!-- WATER PUMP & VIBRARISE MOP -->
+          <div style="background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Water Pump &amp; VibraRise Mop (Cmd 0x6B, 0x6C)</div>
+            
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Peristaltic Water Pump:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('water_pump', 30, 2)">Low (30%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('water_pump', 60, 2)">Med (60%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('water_pump', 100, 2)">High (100%)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('water_pump', 0, 0)">Off</button>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Vibrating Mop Actuator:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('sonic_mop', 40, 2)">Pulse Low</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('sonic_mop', 90, 2)">Pulse High</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('sonic_mop', 0, 0)">Off</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIDAR MOTOR & INDICATORS -->
+          <div style="background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">LiDAR, Button LEDs &amp; Wi-Fi (Cmd 0x83, 0x8D, 0x8E, 0x97)</div>
+            
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">LiDAR Turret Motor:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('lidar', 1, 4)">Spin LiDAR (4s)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('lidar', 0, 0)">Stop LiDAR</button>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Button LEDs &amp; Status Indicators:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('led', 1, 2)">White Buttons (0x8D)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('led', 2, 2)">Red Buttons (0x8D)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('led', 3, 2)">Pulse Buttons</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('wifi_led', 1, 2)">Home / Wi-Fi Solid (0x8E)</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="actuateMotor('wifi_led', 2, 2)">Home / Wi-Fi Blink</button>
+              </div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">Note: Q7 voice/audio is managed via Linux ALSA; port 6001 drives MCU hardware LEDs.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- IMU & ORIENTATION (TAG 15 AHRS) -->
+      <div class="card">
+        <div class="card-title">IMU &amp; Attitude Navigation (Tag 15 AHRS)</div>
+        <div class="grid-3">
+          <div class="metric-tile">
+            <div class="metric-label">Attitude Angles</div>
+            <div class="metric-val" id="valImuAngles">Pitch: 0° | Roll: 0°</div>
+            <div class="metric-sub" id="valImuYaw">Yaw Heading: 0°</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Accelerometer (X, Y, Z)</div>
+            <div class="metric-val" id="valAccel">-- , -- , --</div>
+            <div class="metric-sub">Linear gravity vector</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Gyroscope (X, Y, Z)</div>
+            <div class="metric-val" id="valGyro">-- , -- , --</div>
+            <div class="metric-sub">Angular rate (°/s)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOPPING, ENVIRONMENT & SLAM (TAGS 2, 3, 17, 18, 21, 26, 27, 28, 34) -->
+      <div class="card">
+        <div class="card-title">Mopping, Environment &amp; SLAM (Tags 2, 3, 18, 26, 27, 28, 34)</div>
+        <div class="grid-4">
+          <div class="metric-tile">
+            <div class="metric-label">Mopping System</div>
+            <div class="metric-val" id="valMopStatus">Water: Missing</div>
+            <div class="metric-sub" id="valMopSub">Cloth: Detached | Pump: Off</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Carpet Detection (Tag 27 / Roller Load)</div>
+            <div class="metric-val" id="valCarpetStatus"><span class="badge nominal">HARD FLOOR</span></div>
+            <div class="metric-sub" id="valCarpetSignal">Acoustic Signal: -- (Q7 uses brush drag)</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Wall Distance (Tag 18)</div>
+            <div class="metric-val" id="valWallDist">-- mm</div>
+            <div class="metric-sub">TOF Optical Sensor</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Live SLAM Pose (Tag 26)</div>
+            <div class="metric-val" id="valSlamCoords">X: 0 | Y: 0</div>
+            <div class="metric-sub" id="valSlamTheta">Heading θ: 0.0°</div>
+          </div>
+        </div>
+        <div class="grid-4" style="margin-top: 10px;">
+          <div class="metric-tile">
+            <div class="metric-label">Docking &amp; Charging (Tag 17, 25)</div>
+            <div class="metric-val" id="valDockStatus">Disconnected</div>
+            <div class="metric-sub" id="valDockIr">IR: L [ ] C [ ] R [ ]</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Wi-Fi Signal (Tag 28)</div>
+            <div class="metric-val" id="valWifiRssi">-- dBm</div>
+            <div class="metric-sub">Access Point Signal</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Physical Keys (Tag 13)</div>
+            <div class="metric-val" id="valKeysPressed">None</div>
+            <div class="metric-sub">Power / Home / Spot</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">LiDAR &amp; Safety (Tag 31)</div>
+            <div class="metric-val" id="valLidarBumper"><span class="badge nominal">CLEAR</span></div>
+            <div class="metric-sub">Turret microswitch</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE TELEMETRY TABLE -->
+      <div class="card">
+        <div class="card-title">Live 6001 Telemetry Stream</div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Seq #</th><th>Bumpers</th><th>Cliffs</th><th>Motors</th><th>Battery</th><th>Carpet</th></tr>
+          </thead>
+          <tbody id="telemetryBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Waiting for live frames...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- COMPLETE PROTOBUF 36-TAG INSPECTOR -->
+      <div class="card">
+        <div class="card-title">
+          <span>Complete Protobuf 36-Tag Inspector</span>
+          <button class="btn" style="font-size: 11px; padding: 4px 10px;" onclick="toggleTagInspector()">Toggle View</button>
+        </div>
+        <div class="tag-search-box">
+          <input type="text" id="tagSearch" class="tag-search-input" placeholder="Search by tag #, field name (e.g. 'ahrs', 'cliff', 'wheel', '27')..." oninput="filterTags()">
+        </div>
+        <div class="tag-table-container" id="tagInspectorContainer">
+          <table class="data-table" id="tagsTable">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Tag #</th>
+                <th style="width: 140px;">Identifier</th>
+                <th style="width: 150px;">Nanopb Type</th>
+                <th>Description</th>
+                <th style="width: 280px;">Live Value / Payload</th>
+                <th style="width: 80px;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tagsBody">
+              <!-- Populated dynamically with all 36 tags -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let isConnected = false;
+    let eventSource = null;
+
+    // Master 36-Tag Nanopb Protocol Schema
+    const MASTER_TAGS = {
+      1: { name: "dustbox_state", type: "uint32", desc: "Dustbox Presence (0=missing, 1=inserted)" },
+      2: { name: "waterbox_state", type: "uint32", desc: "Water Tank Presence (0=missing, 1=inserted)" },
+      3: { name: "mop_bracket_state", type: "uint32", desc: "Mop Cloth Bracket (0=missing, 1=attached)" },
+      4: { name: "power_state", type: "uint32", desc: "System Power & Operational State" },
+      5: { name: "clean_mode", type: "uint32", desc: "Cleaning Preset / Fan Speed Mode" },
+      6: { name: "side_brush", type: "Brush_msg", desc: "Side Brush Motor (enabled, current mA, stall)" },
+      7: { name: "rolling_brush", type: "RollingBrush_msg", desc: "Main Roller Brush Motor (enabled, current mA, stall)" },
+      8: { name: "blower", type: "Blower_msg", desc: "Suction Blower Motor (enabled, level, RPM, current)" },
+      9: { name: "left_wheel", type: "Wheel_msg", desc: "Left Drive Wheel (status, speed, current, stall)" },
+      10: { name: "right_wheel", type: "Wheel_msg", desc: "Right Drive Wheel (status, speed, current, stall)" },
+      11: { name: "battery", type: "Battery_msg", desc: "Battery Pack (voltage raw, temp °C, current mA)" },
+      12: { name: "front_bumper", type: "FrontBumper_msg", desc: "Front Bumper Microswitches (left, right, lidar)" },
+      13: { name: "keys", type: "Key_msg", desc: "Top Panel Physical Buttons (Power, Dock, Spot)" },
+      14: { name: "fault_code", type: "uint32", desc: "MCU Active Fault / Error Code" },
+      15: { name: "ahrs", type: "AHRS_msg", desc: "6-Axis IMU (accel X/Y/Z, gyro X/Y/Z, pitch, roll, yaw)" },
+      16: { name: "detect_ground", type: "DetectGround_msg", desc: "Optical Cliff Sensors (LF, RF, L, R drop triggers)" },
+      17: { name: "charge_contact", type: "uint32", desc: "Dock Charging Contact State (0=open, 1=docked)" },
+      18: { name: "follow_wall", type: "FollowWallDetect_msg", desc: "Wall Follow TOF Optical Distance (mm)" },
+      19: { name: "front_touch", type: "FrontTouch_msg", desc: "Front Obstacle Optical Proximity Touch" },
+      20: { name: "edge_touch", type: "EdgeTouch_msg", desc: "Edge Optical Touch / Proximity" },
+      21: { name: "mop_motor_1", type: "MopMotor_msg", desc: "VibraRise Mop Lift & Vibration Actuator" },
+      22: { name: "mop_motor_2", type: "MopMotor_msg", desc: "Dual Rotary Mop Drive Motor" },
+      23: { name: "reserved_tag_23", type: "submessage", desc: "Nanopb Submessage Slot 23" },
+      24: { name: "reserved_tag_24", type: "submessage", desc: "Nanopb Submessage Slot 24" },
+      25: { name: "basestation_ir", type: "Basestation_IR_msg", desc: "Dock IR Beacon Homing Receivers (L, R, C)" },
+      26: { name: "slam_pose", type: "SlamPoseReport_msg", desc: "Live SLAM Pose Coordinates (X mm, Y mm, θ deg)" },
+      27: { name: "ultrasonic", type: "UltraSonic_msg", desc: "Carpet Acoustic Ultrasonic Sensor (detect, signal)" },
+      28: { name: "wifi_rssi", type: "WiFi_RSSI_msg", desc: "Wi-Fi Signal Strength (dBm)" },
+      29: { name: "virtual_wall", type: "VirtualWall_msg", desc: "Magnetic Strip Virtual Wall Sensor" },
+      30: { name: "device_info", type: "DeviceInfo_msg", desc: "Device Hardware Identity & Subsystem Flags" },
+      31: { name: "lidar_bumper", type: "LadarBumper_msg", desc: "LiDAR Turret Collision Microswitch Trigger" },
+      32: { name: "led_mode", type: "uint32", desc: "Button LED Pattern Mode Index" },
+      33: { name: "dustbox_motor", type: "DustboxMotor_msg", desc: "Auto-Empty Dock Port Actuator Motor" },
+      34: { name: "water_pump", type: "WaterPump_msg", desc: "Peristaltic Electronic Water Pump Rate" },
+      35: { name: "sequence", type: "uint32", desc: "Protobuf Packet Sequence Counter" },
+      36: { name: "timestamp", type: "uint32", desc: "MCU Internal Uptime Timestamp (ms)" },
+    };
+
+    function initTagInspector() {
+      const tbody = document.getElementById('tagsBody');
+      tbody.innerHTML = '';
+      for (let tag = 1; tag <= 36; tag++) {
+        const meta = MASTER_TAGS[tag] || { name: `tag_${tag}`, type: 'unknown', desc: '' };
+        const tr = document.createElement('tr');
+        tr.id = `tagRow_${tag}`;
+        tr.innerHTML = `
+          <td><strong>#${tag}</strong></td>
+          <td><code>${meta.name}</code></td>
+          <td><span style="color:var(--text-muted); font-size:11px;">${meta.type}</span></td>
+          <td style="color:var(--text-muted); font-size:11px;">${meta.desc}</td>
+          <td id="tagVal_${tag}" style="font-family:'JetBrains Mono',monospace; word-break:break-all;">--</td>
+          <td><span id="tagBadge_${tag}" class="tag-pill tag-idle">STANDBY</span></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function toggleTagInspector() {
+      const container = document.getElementById('tagInspectorContainer');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function filterTags() {
+      const query = document.getElementById('tagSearch').value.toLowerCase().trim();
+      for (let tag = 1; tag <= 36; tag++) {
+        const row = document.getElementById(`tagRow_${tag}`);
+        if (!row) continue;
+        const meta = MASTER_TAGS[tag] || {};
+        const matches = !query || 
+          String(tag).includes(query) || 
+          meta.name.toLowerCase().includes(query) || 
+          meta.desc.toLowerCase().includes(query);
+        row.style.display = matches ? '' : 'none';
+      }
+    }
+
+    function toggleSteps() {
+      const body = document.getElementById('stepsBody');
+      const txt = document.getElementById('stepsToggleText');
+      const isHidden = (body.style.display === 'none');
+      body.style.display = isHidden ? 'grid' : 'none';
+      txt.innerText = isHidden ? '[Hide Steps]' : '[Show Steps]';
+    }
+
+    function toggleStepsCard() {
+      const steps = document.getElementById('stepsCard');
+      const btnHelp = document.getElementById('btnSetupHelp');
+      if (!steps) return;
+      const isHidden = (steps.style.display === 'none');
+      steps.style.display = isHidden ? 'block' : 'none';
+      if (btnHelp) {
+        btnHelp.innerText = isHidden ? 'Hide Setup Steps' : 'Show Setup Steps';
+      }
+    }
+
+    function updateStatus(connected) {
+      const badge = document.getElementById('statusBadge');
+      const text = document.getElementById('statusText');
+      const steps = document.getElementById('stepsCard');
+      const btnHelp = document.getElementById('btnSetupHelp');
+
+      // Only show the setup steps when the vacuum is NOT connected
+      if (steps) steps.style.display = connected ? 'none' : 'block';
+      if (btnHelp) {
+        btnHelp.style.display = connected ? 'inline-flex' : 'none';
+        btnHelp.innerText = 'Show Setup Steps';
+      }
+
+      if (connected) {
+        badge.className = 'status-badge connected';
+        text.innerText = 'CONNECTED (192.168.5.1:6001)';
+      } else {
+        badge.className = 'status-badge';
+        text.innerText = 'DISCONNECTED';
+      }
+    }
+
+    async function toggleConnect() {
+      const btn = document.getElementById('btnConnect');
+      if (isConnected) {
+        await fetch('/api/disconnect', { method: 'POST' });
+        isConnected = false;
+        if (eventSource) eventSource.close();
+        btn.innerText = 'Start Diagnostics (Connect)';
+        btn.className = 'btn btn-success';
+        updateStatus(false);
+        return;
+      }
+
+      btn.innerText = 'Connecting...';
+      try {
+        const res = await fetch('/api/connect', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+          isConnected = true;
+          btn.innerText = 'Stop Diagnostics';
+          btn.className = 'btn btn-danger';
+          updateStatus(true);
+          startSSE();
+          readAllData();
+        } else {
+          alert('Could not connect to vacuum at 192.168.5.1:6001.\nMake sure your PC is connected to the robot Wi-Fi.');
+          btn.innerText = 'Start Diagnostics (Connect)';
+        }
+      } catch (err) {
+        alert('Network error connecting to robot.');
+        btn.innerText = 'Start Diagnostics (Connect)';
+      }
+    }
+
+    function startSSE() {
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource('/api/events');
+      eventSource.onmessage = function(e) {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'telemetry') {
+          handleFrame(msg.frame);
+        }
+      };
+    }
+
+    function handleFrame(f) {
+      // 1. Chassis Bottom View SVG
+      const bL = document.getElementById('svgBumperLeft');
+      const bR = document.getElementById('svgBumperRight');
+      if (bL) bL.classList.toggle('pressed', !!f.bumper?.left_pressed);
+      if (bR) bR.classList.toggle('pressed', !!f.bumper?.right_pressed);
+
+      const pL = document.getElementById('pinCliffLeft');
+      const pLF = document.getElementById('pinCliffLeftFront');
+      const pRF = document.getElementById('pinCliffRightFront');
+      const pR = document.getElementById('pinCliffRight');
+      if (pL) pL.className = 'sensor-pin ' + (f.cliff?.left_triggered ? 'triggered' : 'good');
+      if (pLF) pLF.className = 'sensor-pin ' + (f.cliff?.left_front_triggered ? 'triggered' : 'good');
+      if (pRF) pRF.className = 'sensor-pin ' + (f.cliff?.right_front_triggered ? 'triggered' : 'good');
+      if (pR) pR.className = 'sensor-pin ' + (f.cliff?.right_triggered ? 'triggered' : 'good');
+
+      // Wheel and Brush Stall coloring on SVG
+      const wL = document.getElementById('svgWheelLeft');
+      const wR = document.getElementById('svgWheelRight');
+      if (wL) wL.setAttribute('fill', f.wheel?.left_stalled ? '#ef4444' : '#334155');
+      if (wR) wR.setAttribute('fill', f.wheel?.right_stalled ? '#ef4444' : '#334155');
+
+      const mb = document.getElementById('svgMainBrush');
+      if (mb) mb.setAttribute('fill', f.brush?.rolling_stalled ? '#ef4444' : '#0f172a');
+
+      const sb = document.getElementById('svgSideBrush');
+      if (sb) sb.setAttribute('fill', f.brush?.side_stalled ? '#ef4444' : '#1e293b');
+
+      const pCarpet = document.getElementById('pinCarpet');
+      if (pCarpet) pCarpet.setAttribute('fill', f.environment?.carpet_detected ? '#f59e0b' : '#334155');
+
+      const pWall = document.getElementById('pinWall');
+      if (pWall) pWall.setAttribute('fill', (f.environment?.wall_distance_raw && f.environment?.wall_distance_raw < 150) ? '#38bdf8' : '#334155');
+
+      const pDockL = document.getElementById('pinDockLeft');
+      const pDockR = document.getElementById('pinDockRight');
+      if (pDockL) pDockL.setAttribute('fill', f.environment?.charge_contact ? '#10b981' : '#475569');
+      if (pDockR) pDockR.setAttribute('fill', f.environment?.charge_contact ? '#10b981' : '#475569');
+
+      // 2. Motors & Drivetrain
+      const rollStalled = !!f.brush?.rolling_stalled;
+      const rollEnabled = !!f.brush?.rolling_enabled;
+      document.getElementById('valRollingStatus').innerHTML = rollStalled ? '<span class="badge error">STALLED</span>' : (rollEnabled ? '<span class="badge nominal">RUNNING</span>' : '<span class="badge info">IDLE</span>');
+      document.getElementById('valRollingCurrent').innerText = `${f.brush?.rolling_current_ma || 0} mA • Spd: ${f.brush?.rolling_speed_raw ?? '--'}`;
+
+      const sideStalled = !!f.brush?.side_stalled;
+      const sideEnabled = !!f.brush?.side_enabled;
+      document.getElementById('valSideStatus').innerHTML = sideStalled ? '<span class="badge error">STALLED</span>' : (sideEnabled ? '<span class="badge nominal">RUNNING</span>' : '<span class="badge info">IDLE</span>');
+      document.getElementById('valSideCurrent').innerText = `${f.brush?.side_current_ma || 0} mA • Spd: ${f.brush?.side_speed_raw ?? '--'}`;
+
+      const blowerStalled = !!f.blower?.is_stalled;
+      document.getElementById('valBlowerSpeed').innerText = (f.blower?.speed_rpm != null ? `${f.blower.speed_rpm} RPM` : '-- RPM');
+      document.getElementById('valBlowerLevel').innerHTML = blowerStalled ? '<span class="badge error">STALLED</span>' : `Level: ${f.blower?.level ?? '--'} • ${f.blower?.current_ma || 0} mA`;
+
+      const wheelsStalled = f.wheel?.left_stalled || f.wheel?.right_stalled;
+      const wheelsUp = f.wheel?.left_wheel_up || f.wheel?.right_wheel_up;
+      document.getElementById('valWheelsStatus').innerHTML = wheelsStalled ? '<span class="badge error">STALLED</span>' : (wheelsUp ? '<span class="badge warn">WHEEL LIFTED</span>' : '<span class="badge nominal">NOMINAL</span>');
+      document.getElementById('valWheelsSub').innerText = `L: ${f.wheel?.left_current || 0}mA (Spd ${f.wheel?.left_speed ?? 0}, Stat ${f.wheel?.left_status ?? 0}) | R: ${f.wheel?.right_current || 0}mA (Spd ${f.wheel?.right_speed ?? 0}, Stat ${f.wheel?.right_status ?? 0})`;
+
+      // 3. IMU / AHRS
+      if (f.ahrs) {
+        document.getElementById('valImuAngles').innerText = `Pitch: ${f.ahrs.pitch ?? 0}° | Roll: ${f.ahrs.roll ?? 0}°`;
+        document.getElementById('valImuYaw').innerText = `Yaw Heading: ${f.ahrs.yaw ?? 0}°`;
+        document.getElementById('valAccel').innerText = `${f.ahrs.accel_x ?? '--'}, ${f.ahrs.accel_y ?? '--'}, ${f.ahrs.accel_z ?? '--'}`;
+        document.getElementById('valGyro').innerText = `${f.ahrs.gyro_x ?? '--'}, ${f.ahrs.gyro_y ?? '--'}, ${f.ahrs.gyro_z ?? '--'}`;
+      }
+
+      // 4. Mopping, Environment & SLAM
+      const waterTxt = f.waterbox_present ? 'Inserted' : 'Missing';
+      document.getElementById('valMopStatus').innerText = `Water: ${waterTxt}`;
+      const pumpTxt = f.mop?.water_pump_enabled ? `Active (${f.mop.water_pump_speed || 0})` : 'Off';
+      const bracketTxt = f.mop_bracket_present ? 'Attached' : 'Detached';
+      document.getElementById('valMopSub').innerText = `Cloth: ${bracketTxt} | Pump: ${pumpTxt}`;
+
+      const carpetDet = !!f.environment?.carpet_detected;
+      document.getElementById('valCarpetStatus').innerHTML = carpetDet ? '<span class="badge warn">CARPET DETECTED</span>' : '<span class="badge nominal">HARD FLOOR</span>';
+      document.getElementById('valCarpetSignal').innerText = `Acoustic Signal: ${f.environment?.carpet_signal ?? '--'}`;
+
+      document.getElementById('valWallDist').innerText = (f.environment?.wall_distance_raw != null ? `${f.environment.wall_distance_raw} mm` : '-- mm');
+
+      if (f.slam_pose) {
+        document.getElementById('valSlamCoords').innerText = `X: ${f.slam_pose.x_mm ?? 0} | Y: ${f.slam_pose.y_mm ?? 0}`;
+        document.getElementById('valSlamTheta').innerText = `Heading θ: ${(f.slam_pose.theta_deg ?? 0).toFixed(1)}°`;
+      }
+
+      document.getElementById('valDockStatus').innerText = f.environment?.charge_contact ? 'Docked (Charging)' : 'Disconnected';
+      const irL = f.environment?.dock_ir_left ? '●' : ' ';
+      const irC = f.environment?.dock_ir_center ? '●' : ' ';
+      const irR = f.environment?.dock_ir_right ? '●' : ' ';
+      document.getElementById('valDockIr').innerText = `IR: L [${irL}] C [${irC}] R [${irR}]`;
+
+      document.getElementById('valWifiRssi').innerText = (f.environment?.wifi_rssi_dbm != null ? `${f.environment.wifi_rssi_dbm} dBm` : '-- dBm');
+
+      const keys = [];
+      if (f.key?.power_pressed) keys.push('Power');
+      if (f.key?.dock_pressed) keys.push('Home');
+      if (f.key?.spot_pressed) keys.push('Spot');
+      document.getElementById('valKeysPressed').innerText = keys.length ? keys.join(' + ') : 'None';
+
+      const lidarStuck = !!f.bumper?.lidar_pressed;
+      document.getElementById('valLidarBumper').innerHTML = lidarStuck ? '<span class="badge error">TRIGGERED</span>' : '<span class="badge nominal">CLEAR</span>';
+
+      // Battery & Dust & Fault
+      if (f.battery?.estimated_voltage_v) {
+        let batStr = `${f.battery.estimated_voltage_v}V`;
+        if (f.battery.percentage != null) batStr += ` (${f.battery.percentage}%)`;
+        if (f.battery.is_charging) batStr += ' [⚡ Charging]';
+        document.getElementById('infoBat').innerText = batStr;
+      }
+      document.getElementById('infoFault').innerText = f.fault_code ? `Error ${f.fault_code}` : '0 (Nominal)';
+
+      // Live Cliff ADC auto-update if emitted in passive stream
+      if (f.cliff?.left_adc != null) {
+        updateCliffRow('Left', f.cliff.left_adc, f.cliff.left_triggered);
+        updateCliffRow('LeftFront', f.cliff.left_front_adc, f.cliff.left_front_triggered);
+        updateCliffRow('RightFront', f.cliff.right_front_adc, f.cliff.right_front_triggered);
+        updateCliffRow('Right', f.cliff.right_adc, f.cliff.right_triggered);
+      }
+
+      // 5. Telemetry log row
+      const tbody = document.getElementById('telemetryBody');
+      if (tbody.children[0]?.innerText?.includes('Waiting')) tbody.innerHTML = '';
+      const tr = document.createElement('tr');
+      const bump = (f.bumper.left_pressed ? 'L ' : '') + (f.bumper.right_pressed ? 'R ' : '') || 'Clear';
+      const cliff = (f.cliff.left_triggered ? 'L ' : '') + (f.cliff.left_front_triggered ? 'LF ' : '') + (f.cliff.right_front_triggered ? 'RF ' : '') + (f.cliff.right_triggered ? 'R ' : '') || 'Clear';
+      const mot = wheelsStalled || rollStalled || sideStalled ? 'STALL' : 'Nominal';
+      const carp = carpetDet ? 'Carpet' : 'Floor';
+
+      tr.innerHTML = `
+        <td>#${f.sequence || '--'}</td>
+        <td><span class="${bump !== 'Clear' ? 'badge error' : 'badge nominal'}">${bump}</span></td>
+        <td><span class="${cliff !== 'Clear' ? 'badge error' : 'badge nominal'}">${cliff}</span></td>
+        <td><span class="${mot !== 'Nominal' ? 'badge error' : 'badge nominal'}">${mot}</span></td>
+        <td>${f.battery.estimated_voltage_v || '--'}V</td>
+        <td>${carp}</td>
+      `;
+      tbody.insertBefore(tr, tbody.firstChild);
+      if (tbody.children.length > 20) tbody.removeChild(tbody.lastChild);
+
+      // 6. Update 36-Tag Inspector
+      if (f.raw_tags) {
+        for (let tag = 1; tag <= 36; tag++) {
+          const tagInfo = f.raw_tags[tag] || f.raw_tags[String(tag)];
+          const valEl = document.getElementById(`tagVal_${tag}`);
+          const badgeEl = document.getElementById(`tagBadge_${tag}`);
+          if (!valEl || !badgeEl) continue;
+
+          if (tagInfo !== undefined) {
+            badgeEl.className = 'tag-pill tag-active';
+            badgeEl.innerText = 'ACTIVE';
+
+            // Format value cleanly
+            let displayVal = tagInfo.value !== undefined ? tagInfo.value : tagInfo;
+            if (tag === 1) displayVal = f.dustbox_present ? '1 (Present)' : '0 (Missing)';
+            else if (tag === 2) displayVal = f.waterbox_present ? '1 (Present)' : '0 (Missing)';
+            else if (tag === 3) displayVal = f.mop_bracket_present ? '1 (Attached)' : '0 (Detached)';
+            else if (tag === 4) displayVal = `power_state: ${f.power_state ?? 0}`;
+            else if (tag === 5) displayVal = `clean_mode: ${f.clean_mode ?? 0}`;
+            else if (tag === 6) displayVal = `en: ${f.brush?.side_enabled ? 1 : 0}, spd: ${f.brush?.side_speed_raw ?? 0}, curr: ${f.brush?.side_current_ma || 0}mA, stall: ${!!f.brush?.side_stalled}`;
+            else if (tag === 7) displayVal = `en: ${f.brush?.rolling_enabled ? 1 : 0}, spd: ${f.brush?.rolling_speed_raw ?? 0}, curr: ${f.brush?.rolling_current_ma || 0}mA, stall: ${!!f.brush?.rolling_stalled}`;
+            else if (tag === 8) displayVal = `en: ${f.blower?.enabled ? 1 : 0}, lvl: ${f.blower?.level ?? 0}, rpm: ${f.blower?.speed_rpm || 0}, curr: ${f.blower?.current_ma || 0}mA`;
+            else if (tag === 9) displayVal = `status: ${f.wheel?.left_status ?? 0}, spd: ${f.wheel?.left_speed ?? 0}, curr: ${f.wheel?.left_current || 0}mA, stall: ${!!f.wheel?.left_stalled}${f.wheel?.left_wheel_up ? ', wheel_up: 1 (lifted)' : ''}`;
+            else if (tag === 10) displayVal = `status: ${f.wheel?.right_status ?? 0}, spd: ${f.wheel?.right_speed ?? 0}, curr: ${f.wheel?.right_current || 0}mA, stall: ${!!f.wheel?.right_stalled}${f.wheel?.right_wheel_up ? ', wheel_up: 1 (lifted)' : ''}`;
+            else if (tag === 11) displayVal = `${f.battery?.estimated_voltage_v || '--'}V, raw: ${f.battery?.voltage_raw || 0}, temp: ${f.battery?.temperature_raw || 0}°C, curr: ${f.battery?.current_raw || 0}mA`;
+            else if (tag === 12) displayVal = `L: ${f.bumper?.left_pressed ? 1 : 0}, R: ${f.bumper?.right_pressed ? 1 : 0}, lidar: ${f.bumper?.lidar_pressed ? 1 : 0}`;
+            else if (tag === 13) displayVal = `power: ${f.key?.power_pressed ? 1 : 0}, dock: ${f.key?.dock_pressed ? 1 : 0}, spot: ${f.key?.spot_pressed ? 1 : 0}`;
+            else if (tag === 14) displayVal = `code: ${f.fault_code || 0}`;
+            else if (tag === 15) displayVal = `pitch: ${f.ahrs?.pitch ?? 0}°, roll: ${f.ahrs?.roll ?? 0}°, yaw: ${f.ahrs?.yaw ?? 0}°, accel: [${f.ahrs?.accel_x ?? 0}, ${f.ahrs?.accel_y ?? 0}, ${f.ahrs?.accel_z ?? 0}]`;
+            else if (tag === 16) displayVal = `L:${f.cliff?.left_triggered ? 1 : 0}, LF:${f.cliff?.left_front_triggered ? 1 : 0}, RF:${f.cliff?.right_front_triggered ? 1 : 0}, R:${f.cliff?.right_triggered ? 1 : 0}`;
+            else if (tag === 17) displayVal = `charge_contact: ${f.environment?.charge_contact ? 1 : 0}`;
+            else if (tag === 18) displayVal = `dist: ${f.environment?.wall_distance_raw || 0} mm`;
+            else if (tag === 19) displayVal = `proximity: ${f.environment?.front_proximity_raw || 0}`;
+            else if (tag === 21) displayVal = `en: ${f.mop?.mop_motor_enabled ? 1 : 0}, curr: ${f.mop?.mop_motor_current || 0}mA, lift_stat: ${f.mop?.mop_lift_status || 0}`;
+            else if (tag === 22) displayVal = `mop2_en: ${f.mop?.mop_motor_2_enabled ? 1 : 0}`;
+            else if (tag === 25) displayVal = `IR: L[${f.environment?.dock_ir_left ? 1 : 0}] C[${f.environment?.dock_ir_center ? 1 : 0}] R[${f.environment?.dock_ir_right ? 1 : 0}]`;
+            else if (tag === 26) displayVal = `X: ${f.slam_pose?.x_mm || 0}mm, Y: ${f.slam_pose?.y_mm || 0}mm, θ: ${(f.slam_pose?.theta_deg || 0).toFixed(1)}°`;
+            else if (tag === 27) displayVal = `carpet: ${f.environment?.carpet_detected ? 1 : 0}, signal: ${f.environment?.carpet_signal || 0}`;
+            else if (tag === 28) displayVal = `rssi: ${f.environment?.wifi_rssi_dbm || '--'} dBm`;
+            else if (tag === 29) displayVal = `virtual_wall: ${f.environment?.virtual_wall_detected ? 1 : 0}`;
+            else if (tag === 31) displayVal = `lidar_bump: ${f.bumper?.lidar_pressed ? 1 : 0}`;
+            else if (tag === 32) displayVal = `led_mode: ${f.environment?.led_mode ?? 0}`;
+            else if (tag === 33) displayVal = `dustbox_motor: ${f.environment?.dustbox_motor_enabled ? 1 : 0}`;
+            else if (tag === 34) displayVal = `pump_en: ${f.mop?.water_pump_enabled ? 1 : 0}, rate: ${f.mop?.water_pump_speed || 0}`;
+            else if (tag === 35) displayVal = `#${f.sequence}`;
+            else if (tag === 36) displayVal = `${f.timestamp_raw} ms`;
+            else if (typeof displayVal === 'object') displayVal = JSON.stringify(displayVal);
+
+            valEl.innerText = displayVal;
+          }
+        }
+      }
+    }
+
+    async function readAllData() {
+      try {
+        const res = await fetch('/api/read_all_6001', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+          updateUI(d.data, d.diagnosis, d.cliff_adc);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function readCliff() {
+      try {
+        const res = await fetch('/api/run_cliff_read', { method: 'POST' });
+        const d = await res.json();
+        if (d.success && d.cliff_adc?.data) {
+          const adcs = d.cliff_adc.data.adc || {};
+          const trigs = d.cliff_adc.data.triggers || {};
+
+          updateCliffRow('Left', adcs.left, trigs.left);
+          updateCliffRow('LeftFront', adcs.left_front, trigs.left_front);
+          updateCliffRow('RightFront', adcs.right_front, trigs.right_front);
+          updateCliffRow('Right', adcs.right, trigs.right);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function updateCliffRow(name, adc, isTrig) {
+      const adcElem = document.getElementById('adcCliff' + name);
+      const statElem = document.getElementById('statCliff' + name);
+      if (adcElem && adc !== undefined) adcElem.innerText = adc;
+      if (statElem) {
+        statElem.innerHTML = isTrig ? '<span class="badge error">TRIGGERED</span>' : '<span class="badge nominal">CLEAR</span>';
+      }
+    }
+
+    function updateUI(data, diag, cliffAdc) {
+      if (!data) return;
+      if (data.getters?.model?.decoded?.value) {
+        document.getElementById('infoModel').innerText = data.getters.model.decoded.value;
+      }
+      if (data.getters?.sku?.decoded?.value) {
+        document.getElementById('infoSku').innerText = data.getters.sku.decoded.value;
+      }
+      if (data.discovery?.versions?.software) {
+        document.getElementById('infoFw').innerText = data.discovery.versions.software;
+      }
+      if (data.discovery?.versions?.mcu) {
+        document.getElementById('infoMcu').innerText = data.discovery.versions.mcu;
+      }
+
+      if (cliffAdc?.data) {
+        const adcs = cliffAdc.data.adc || {};
+        const trigs = cliffAdc.data.triggers || {};
+        updateCliffRow('Left', adcs.left, trigs.left);
+        updateCliffRow('LeftFront', adcs.left_front, trigs.left_front);
+        updateCliffRow('RightFront', adcs.right_front, trigs.right_front);
+        updateCliffRow('Right', adcs.right, trigs.right);
+      }
+
+      if (diag) {
+        document.getElementById('healthScore').innerText = diag.overall_score;
+        const banner = document.getElementById('healthBanner');
+        const title = document.getElementById('healthTitle');
+        const desc = document.getElementById('healthDesc');
+
+        if (diag.overall_status === 'nominal') {
+          banner.className = 'health-banner nominal';
+          title.innerText = `ALL SYSTEMS NOMINAL (${diag.overall_score}%)`;
+          desc.innerText = 'No hardware faults detected. Sensors, motors, and battery are healthy.';
+        } else {
+          banner.className = 'health-banner fault';
+          title.innerText = `FAULT DETECTED (${diag.overall_score}%)`;
+          desc.innerText = 'One or more sensors require attention. See repair steps below.';
+        }
+
+        renderSubsystems(diag.subsystems);
+        renderFaults(diag.issues);
+      }
+    }
+
+    function renderSubsystems(subsystems) {
+      if (!subsystems) return;
+      const map = {
+        cliff: 'subCliff',
+        bumper: 'subBumper',
+        motors: 'subMotors',
+        imu: 'subImu',
+        battery: 'subBattery',
+        dustbin: 'subDustbin',
+        system: 'subSystem'
+      };
+
+      for (const [key, id] of Object.entries(map)) {
+        const item = subsystems[key];
+        const el = document.getElementById(id);
+        if (item && el) {
+          el.innerText = `${item.score}%`;
+          el.style.color = item.status === 'nominal' ? 'var(--good)' : (item.status === 'warning' ? 'var(--warn)' : 'var(--bad)');
+        }
+      }
+    }
+
+    function renderFaults(issues) {
+      const container = document.getElementById('faultsContainer');
+      const badge = document.getElementById('faultBadge');
+      if (!issues || issues.length === 0) {
+        badge.innerText = '0 FAULTS';
+        badge.className = 'badge nominal';
+        container.innerHTML = 'All components operating normally.';
+        return;
+      }
+
+      badge.innerText = issues.length + ' FAULT' + (issues.length > 1 ? 'S' : '');
+      badge.className = 'badge error';
+
+      let html = '';
+      issues.forEach(i => {
+        html += `
+          <div class="fault-card">
+            <div class="fault-title">${i.title}</div>
+            <div class="fault-desc">${i.description}</div>
+            <div class="repair-steps">
+              <strong>Repair Steps:</strong>
+              <ol>${i.repair_steps.map(s => `<li>${s}</li>`).join('')}</ol>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    async function actuateMotor(component, value, duration) {
+      if (!isConnected) {
+        alert('Please connect to the vacuum (Start Diagnostics) before testing motors.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/actuate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ component, value, duration })
+        });
+        const d = await res.json();
+        if (!d.success) {
+          alert('Actuation command failed: ' + (d.error || 'Check connection'));
+        }
+      } catch (err) {
+        alert('Error sending actuation command: ' + err);
+      }
+    }
+
+    async function exportReport() {
+      window.open('/api/export', '_blank');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      initTagInspector();
+      try {
+        const res = await fetch('/api/status');
+        const st = await res.json();
+        if (st.connected) {
+          isConnected = true;
+          document.getElementById('btnConnect').innerText = 'Stop Diagnostics';
+          document.getElementById('btnConnect').className = 'btn btn-danger';
+          updateStatus(true);
+          startSSE();
+          readAllData();
+        }
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>
